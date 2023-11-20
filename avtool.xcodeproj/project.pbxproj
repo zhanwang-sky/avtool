@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		D990F2872B0B23FA00E099FA /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D990F2862B0B23FA00E099FA /* main.cpp */; };
+		D9F87C5A2B0B3E68007336CB /* libopus.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F87C592B0B3E68007336CB /* libopus.0.dylib */; };
+		D9F87C602B0B3EA7007336CB /* mod_opus.c in Sources */ = {isa = PBXBuildFile; fileRef = D9F87C5F2B0B3EA7007336CB /* mod_opus.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,6 +28,9 @@
 		D90DFA092B0B2887006F4550 /* tlv_reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = tlv_reader.hpp; sourceTree = "<group>"; };
 		D990F2832B0B23FA00E099FA /* avtool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = avtool; sourceTree = BUILT_PRODUCTS_DIR; };
 		D990F2862B0B23FA00E099FA /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D9F87C592B0B3E68007336CB /* libopus.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopus.0.dylib; path = ../../../../../opt/homebrew/Cellar/opus/1.4/lib/libopus.0.dylib; sourceTree = "<group>"; };
+		D9F87C5E2B0B3EA7007336CB /* mod_opus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mod_opus.h; sourceTree = "<group>"; };
+		D9F87C5F2B0B3EA7007336CB /* mod_opus.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = mod_opus.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -33,6 +38,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9F87C5A2B0B3E68007336CB /* libopus.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,6 +50,7 @@
 			children = (
 				D990F2852B0B23FA00E099FA /* avtool */,
 				D990F2842B0B23FA00E099FA /* Products */,
+				D9F87C582B0B3E68007336CB /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -58,10 +65,28 @@
 		D990F2852B0B23FA00E099FA /* avtool */ = {
 			isa = PBXGroup;
 			children = (
+				D9F87C5D2B0B3E8A007336CB /* mod_opus */,
 				D90DFA092B0B2887006F4550 /* tlv_reader.hpp */,
 				D990F2862B0B23FA00E099FA /* main.cpp */,
 			);
 			path = avtool;
+			sourceTree = "<group>";
+		};
+		D9F87C582B0B3E68007336CB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D9F87C592B0B3E68007336CB /* libopus.0.dylib */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D9F87C5D2B0B3E8A007336CB /* mod_opus */ = {
+			isa = PBXGroup;
+			children = (
+				D9F87C5E2B0B3EA7007336CB /* mod_opus.h */,
+				D9F87C5F2B0B3EA7007336CB /* mod_opus.c */,
+			);
+			path = mod_opus;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -122,6 +147,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D990F2872B0B23FA00E099FA /* main.cpp in Sources */,
+				D9F87C602B0B3EA7007336CB /* mod_opus.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,6 +273,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				HEADER_SEARCH_PATHS = /opt/homebrew/Cellar/opus/1.4/include;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/homebrew/Cellar/opus/1.4/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -255,6 +286,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				HEADER_SEARCH_PATHS = /opt/homebrew/Cellar/opus/1.4/include;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/homebrew/Cellar/opus/1.4/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
