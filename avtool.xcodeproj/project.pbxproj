@@ -23,6 +23,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D90DFA092B0B2887006F4550 /* tlv_reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = tlv_reader.hpp; sourceTree = "<group>"; };
 		D990F2832B0B23FA00E099FA /* avtool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = avtool; sourceTree = BUILT_PRODUCTS_DIR; };
 		D990F2862B0B23FA00E099FA /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -57,6 +58,7 @@
 		D990F2852B0B23FA00E099FA /* avtool */ = {
 			isa = PBXGroup;
 			children = (
+				D90DFA092B0B2887006F4550 /* tlv_reader.hpp */,
 				D990F2862B0B23FA00E099FA /* main.cpp */,
 			);
 			path = avtool;
