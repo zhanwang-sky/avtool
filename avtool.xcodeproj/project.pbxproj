@@ -28,7 +28,7 @@
 		D90DFA092B0B2887006F4550 /* tlv_reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = tlv_reader.hpp; sourceTree = "<group>"; };
 		D990F2832B0B23FA00E099FA /* avtool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = avtool; sourceTree = BUILT_PRODUCTS_DIR; };
 		D990F2862B0B23FA00E099FA /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		D9F87C592B0B3E68007336CB /* libopus.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopus.0.dylib; path = ../../../../../opt/homebrew/Cellar/opus/1.4/lib/libopus.0.dylib; sourceTree = "<group>"; };
+		D9F87C592B0B3E68007336CB /* libopus.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopus.0.dylib; path = /opt/homebrew/Cellar/opus/1.4/lib/libopus.0.dylib; sourceTree = "<group>"; };
 		D9F87C5E2B0B3EA7007336CB /* mod_opus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mod_opus.h; sourceTree = "<group>"; };
 		D9F87C5F2B0B3EA7007336CB /* mod_opus.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = mod_opus.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */

@@ -19,21 +19,25 @@ class avTLVReader {
   avTLVReader(const avTLVReader&) = delete;
   avTLVReader& operator=(const avTLVReader&) = delete;
 
-  avTLVReader(const std::string& filename)
+  avTLVReader(const std::string& filename) noexcept
       : fd_(open(filename.c_str(), O_RDONLY)) { }
 
-  avTLVReader(avTLVReader&& rhs)
+  avTLVReader(avTLVReader&& rhs) noexcept
       : fd_(rhs.fd_), pos_(rhs.pos_) {
     rhs.fd_ = -1;
     rhs.pos_ = 0;
   }
 
-  avTLVReader& operator=(avTLVReader&& rhs) {
-    do_clean();
-    fd_ = rhs.fd_;
-    pos_ = rhs.pos_;
-    rhs.fd_ = -1;
-    rhs.pos_ = 0;
+  avTLVReader& operator=(avTLVReader&& rhs) noexcept {
+    if (this != &rhs) {
+      do_clean();
+
+      fd_ = rhs.fd_;
+      pos_ = rhs.pos_;
+      rhs.fd_ = -1;
+      rhs.pos_ = 0;
+    }
+
     return *this;
   }
 
