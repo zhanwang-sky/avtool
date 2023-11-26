@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D90AC9472B10EAF9001A66A7 /* audio_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D90AC9462B10EAF9001A66A7 /* audio_helper.cpp */; };
+		D91001332B10E92E00194B17 /* libavcodec.60.3.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D91001322B10E92E00194B17 /* libavcodec.60.3.100.dylib */; };
+		D91001372B10E93D00194B17 /* libavformat.60.3.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D91001362B10E93D00194B17 /* libavformat.60.3.100.dylib */; };
+		D910013A2B10E94E00194B17 /* libavutil.58.2.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D91001392B10E94E00194B17 /* libavutil.58.2.100.dylib */; };
+		D910013D2B10E97700194B17 /* libswresample.4.10.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D910013C2B10E97700194B17 /* libswresample.4.10.100.dylib */; };
 		D990F2872B0B23FA00E099FA /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D990F2862B0B23FA00E099FA /* main.cpp */; };
 		D9F87C5A2B0B3E68007336CB /* libopus.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F87C592B0B3E68007336CB /* libopus.0.dylib */; };
 		D9F87C602B0B3EA7007336CB /* mod_opus.c in Sources */ = {isa = PBXBuildFile; fileRef = D9F87C5F2B0B3EA7007336CB /* mod_opus.c */; };
@@ -25,7 +30,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D90AC9452B10EAF9001A66A7 /* audio_helper.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = audio_helper.hpp; sourceTree = "<group>"; };
+		D90AC9462B10EAF9001A66A7 /* audio_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = audio_helper.cpp; sourceTree = "<group>"; };
 		D90DFA092B0B2887006F4550 /* tlv_reader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = tlv_reader.hpp; sourceTree = "<group>"; };
+		D91001322B10E92E00194B17 /* libavcodec.60.3.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.60.3.100.dylib; path = /opt/homebrew/Cellar/ffmpeg/6.0_1/lib/libavcodec.60.3.100.dylib; sourceTree = "<group>"; };
+		D91001362B10E93D00194B17 /* libavformat.60.3.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.60.3.100.dylib; path = /opt/homebrew/Cellar/ffmpeg/6.0_1/lib/libavformat.60.3.100.dylib; sourceTree = "<group>"; };
+		D91001392B10E94E00194B17 /* libavutil.58.2.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.58.2.100.dylib; path = /opt/homebrew/Cellar/ffmpeg/6.0_1/lib/libavutil.58.2.100.dylib; sourceTree = "<group>"; };
+		D910013C2B10E97700194B17 /* libswresample.4.10.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.4.10.100.dylib; path = /opt/homebrew/Cellar/ffmpeg/6.0_1/lib/libswresample.4.10.100.dylib; sourceTree = "<group>"; };
 		D990F2832B0B23FA00E099FA /* avtool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = avtool; sourceTree = BUILT_PRODUCTS_DIR; };
 		D990F2862B0B23FA00E099FA /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D9F87C592B0B3E68007336CB /* libopus.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopus.0.dylib; path = /opt/homebrew/Cellar/opus/1.4/lib/libopus.0.dylib; sourceTree = "<group>"; };
@@ -38,13 +49,26 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D91001332B10E92E00194B17 /* libavcodec.60.3.100.dylib in Frameworks */,
+				D91001372B10E93D00194B17 /* libavformat.60.3.100.dylib in Frameworks */,
+				D910013A2B10E94E00194B17 /* libavutil.58.2.100.dylib in Frameworks */,
 				D9F87C5A2B0B3E68007336CB /* libopus.0.dylib in Frameworks */,
+				D910013D2B10E97700194B17 /* libswresample.4.10.100.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D90E2A7F2B10EAB2009B071F /* avtool */ = {
+			isa = PBXGroup;
+			children = (
+				D90AC9462B10EAF9001A66A7 /* audio_helper.cpp */,
+				D90AC9452B10EAF9001A66A7 /* audio_helper.hpp */,
+			);
+			path = avtool;
+			sourceTree = "<group>";
+		};
 		D990F27A2B0B23FA00E099FA = {
 			isa = PBXGroup;
 			children = (
@@ -65,6 +89,7 @@
 		D990F2852B0B23FA00E099FA /* avtool */ = {
 			isa = PBXGroup;
 			children = (
+				D90E2A7F2B10EAB2009B071F /* avtool */,
 				D9F87C5D2B0B3E8A007336CB /* mod_opus */,
 				D90DFA092B0B2887006F4550 /* tlv_reader.hpp */,
 				D990F2862B0B23FA00E099FA /* main.cpp */,
@@ -75,6 +100,10 @@
 		D9F87C582B0B3E68007336CB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D910013C2B10E97700194B17 /* libswresample.4.10.100.dylib */,
+				D91001392B10E94E00194B17 /* libavutil.58.2.100.dylib */,
+				D91001362B10E93D00194B17 /* libavformat.60.3.100.dylib */,
+				D91001322B10E92E00194B17 /* libavcodec.60.3.100.dylib */,
 				D9F87C592B0B3E68007336CB /* libopus.0.dylib */,
 			);
 			name = Frameworks;
@@ -148,6 +177,7 @@
 			files = (
 				D990F2872B0B23FA00E099FA /* main.cpp in Sources */,
 				D9F87C602B0B3EA7007336CB /* mod_opus.c in Sources */,
+				D90AC9472B10EAF9001A66A7 /* audio_helper.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,9 +303,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = /opt/homebrew/Cellar/opus/1.4/include;
+				HEADER_SEARCH_PATHS = (
+					/opt/homebrew/Cellar/ffmpeg/6.0_1/include,
+					/opt/homebrew/Cellar/opus/1.4/include,
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					/opt/homebrew/Cellar/ffmpeg/6.0_1/lib,
 					/opt/homebrew/Cellar/opus/1.4/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -286,9 +320,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = /opt/homebrew/Cellar/opus/1.4/include;
+				HEADER_SEARCH_PATHS = (
+					/opt/homebrew/Cellar/ffmpeg/6.0_1/include,
+					/opt/homebrew/Cellar/opus/1.4/include,
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					/opt/homebrew/Cellar/ffmpeg/6.0_1/lib,
 					/opt/homebrew/Cellar/opus/1.4/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
