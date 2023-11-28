@@ -5,10 +5,9 @@
 //  Created by zhanwang-sky on 2023/11/20.
 //
 
-#include <fstream>
 #include <iostream>
 #include <memory>
-#include "avtool/audio_helper.hpp"
+#include "avtool/media_dumper.hpp"
 #include "mod_opus/mod_opus.h"
 #include "tlv_reader.hpp"
 
@@ -24,10 +23,11 @@ using opus_ctx_ptr = std::unique_ptr<av_opus_context_t, decltype(&av_opus_destro
 
 uint8_t pkt_buf[384];
 uint8_t frame_buf[SAMPLES_PER_FRAME * NR_CHANNELS * 2];
+uint8_t* audio_data[1] = {frame_buf}; // packed
 
 int main(int argc, char* argv[]) {
   if (argc != 3) {
-    cerr << "Usage: ./avtool {dump.tlv} {dump.pcm}\n";
+    cerr << "Usage: ./avtool {dump.tlv} {dump.wav}\n";
     exit(EXIT_FAILURE);
   }
 
@@ -37,11 +37,10 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  std::ofstream pcm_dumper{argv[2], std::ofstream::binary | std::ofstream::trunc};
-  if (!pcm_dumper) {
-    cerr << "Fail to open pcm file '" << argv[2] << "'\n";
-    exit(EXIT_FAILURE);
-  }
+  AVChannelLayout ch_layout = (NR_CHANNELS > 1)
+                              ? (AVChannelLayout) AV_CHANNEL_LAYOUT_STEREO
+                              : (AVChannelLayout) AV_CHANNEL_LAYOUT_MONO;
+  AVTool::AudioDumper audio_dumper{argv[2], AV_SAMPLE_FMT_S16, ch_layout, SAMPLE_RATE};
 
   opus_ctx_ptr opus_ctx{av_opus_init(true, false, SAMPLE_RATE, NR_CHANNELS), &av_opus_destroy};
   if (!opus_ctx) {
@@ -68,9 +67,11 @@ int main(int argc, char* argv[]) {
                                      frame_buf, SAMPLES_PER_FRAME);
     cout << samples_decoded << " samples decoded\n";
     if (samples_decoded > 0) {
-      pcm_dumper.write((const char*) frame_buf, samples_decoded * NR_CHANNELS * 2);
+      audio_dumper.dump(audio_data, samples_decoded);
     }
   }
+
+  audio_dumper.dump(NULL, 0);
 
   cout << "break, rc=" << tlv_len << endl;
 

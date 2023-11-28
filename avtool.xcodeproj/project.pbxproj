@@ -13,6 +13,7 @@
 		D910013A2B10E94E00194B17 /* libavutil.58.2.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D91001392B10E94E00194B17 /* libavutil.58.2.100.dylib */; };
 		D910013D2B10E97700194B17 /* libswresample.4.10.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D910013C2B10E97700194B17 /* libswresample.4.10.100.dylib */; };
 		D990F2872B0B23FA00E099FA /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D990F2862B0B23FA00E099FA /* main.cpp */; };
+		D9D68E622B133BC9003399E1 /* media_dumper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9D68E602B133BC9003399E1 /* media_dumper.cpp */; };
 		D9F87C5A2B0B3E68007336CB /* libopus.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F87C592B0B3E68007336CB /* libopus.0.dylib */; };
 		D9F87C602B0B3EA7007336CB /* mod_opus.c in Sources */ = {isa = PBXBuildFile; fileRef = D9F87C5F2B0B3EA7007336CB /* mod_opus.c */; };
 /* End PBXBuildFile section */
@@ -39,6 +40,8 @@
 		D910013C2B10E97700194B17 /* libswresample.4.10.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.4.10.100.dylib; path = /opt/homebrew/Cellar/ffmpeg/6.0_1/lib/libswresample.4.10.100.dylib; sourceTree = "<group>"; };
 		D990F2832B0B23FA00E099FA /* avtool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = avtool; sourceTree = BUILT_PRODUCTS_DIR; };
 		D990F2862B0B23FA00E099FA /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D9D68E602B133BC9003399E1 /* media_dumper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = media_dumper.cpp; sourceTree = "<group>"; };
+		D9D68E612B133BC9003399E1 /* media_dumper.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = media_dumper.hpp; sourceTree = "<group>"; };
 		D9F87C592B0B3E68007336CB /* libopus.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopus.0.dylib; path = /opt/homebrew/Cellar/opus/1.4/lib/libopus.0.dylib; sourceTree = "<group>"; };
 		D9F87C5E2B0B3EA7007336CB /* mod_opus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mod_opus.h; sourceTree = "<group>"; };
 		D9F87C5F2B0B3EA7007336CB /* mod_opus.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = mod_opus.c; sourceTree = "<group>"; };
@@ -63,6 +66,8 @@
 		D90E2A7F2B10EAB2009B071F /* avtool */ = {
 			isa = PBXGroup;
 			children = (
+				D9D68E602B133BC9003399E1 /* media_dumper.cpp */,
+				D9D68E612B133BC9003399E1 /* media_dumper.hpp */,
 				D90AC9462B10EAF9001A66A7 /* audio_helper.cpp */,
 				D90AC9452B10EAF9001A66A7 /* audio_helper.hpp */,
 			);
@@ -176,6 +181,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D990F2872B0B23FA00E099FA /* main.cpp in Sources */,
+				D9D68E622B133BC9003399E1 /* media_dumper.cpp in Sources */,
 				D9F87C602B0B3EA7007336CB /* mod_opus.c in Sources */,
 				D90AC9472B10EAF9001A66A7 /* audio_helper.cpp in Sources */,
 			);

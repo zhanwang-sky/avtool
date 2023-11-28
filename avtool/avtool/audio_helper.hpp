@@ -26,13 +26,15 @@ class Resampler {
   Resampler& operator=(const Resampler&) = delete;
 
   Resampler(enum AVSampleFormat in_sample_fmt,  const AVChannelLayout& in_chlayout,  int in_sample_rate,
-            enum AVSampleFormat out_sample_fmt, const AVChannelLayout& out_chlayout, int out_sample_rate);
+            enum AVSampleFormat out_sample_fmt, const AVChannelLayout& out_chlayout, int out_sample_rate) noexcept;
 
   Resampler(Resampler&& rhs) noexcept;
 
   Resampler& operator=(Resampler&& rhs) noexcept;
 
   virtual ~Resampler();
+
+  bool operator!() const;
 
   int resample(AVAudioFifo* af, const uint8_t** audio_data, int nb_samples);
 

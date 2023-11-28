@@ -5,7 +5,6 @@
 //  Created by zhanwang-sky on 2023/11/24.
 //
 
-#include <stdexcept>
 #include "audio_helper.hpp"
 
 using namespace AVTool;
@@ -40,22 +39,20 @@ err_exit:
 
 Resampler::Resampler(enum AVSampleFormat in_sample_fmt,  const AVChannelLayout& in_chlayout,  int in_sample_rate,
                      enum AVSampleFormat out_sample_fmt, const AVChannelLayout& out_chlayout, int out_sample_rate)
+  noexcept
     : in_sample_fmt_(in_sample_fmt),
       in_channels_(in_chlayout.nb_channels),
       in_sample_rate_(in_sample_rate),
       out_sample_fmt_(out_sample_fmt),
       out_channels_(out_chlayout.nb_channels),
       out_sample_rate_(out_sample_rate) {
-  const char* err_msg = NULL;
-
-  /* create resampler context */
+  // create resampler context
   swr_ = swr_alloc();
   if (!swr_) {
-    err_msg = "Could not allocate resampler context";
     goto err_exit;
   }
 
-  /* set options */
+  // set options
   av_opt_set_sample_fmt(swr_, "in_sample_fmt", in_sample_fmt, 0);
   av_opt_set_chlayout(swr_, "in_chlayout", &in_chlayout, 0);
   av_opt_set_int(swr_, "in_sample_rate", in_sample_rate, 0);
@@ -64,9 +61,8 @@ Resampler::Resampler(enum AVSampleFormat in_sample_fmt,  const AVChannelLayout& 
   av_opt_set_chlayout(swr_, "out_chlayout", &out_chlayout, 0);
   av_opt_set_int(swr_, "out_sample_rate", out_sample_rate, 0);
 
-  /* initialize the resampling context */
+  // initialize the resampling context
   if (swr_init(swr_) < 0) {
-    err_msg = "Failed to initialize the resampling context";
     goto err_exit;
   }
 
@@ -74,7 +70,6 @@ Resampler::Resampler(enum AVSampleFormat in_sample_fmt,  const AVChannelLayout& 
 
 err_exit:
   clean();
-  throw std::runtime_error(err_msg);
 }
 
 Resampler::Resampler(Resampler&& rhs) noexcept
@@ -115,6 +110,10 @@ Resampler::~Resampler() {
   clean();
 }
 
+bool Resampler::operator!() const {
+  return !swr_;
+}
+
 int Resampler::resample(AVAudioFifo* af,
                         const uint8_t** audio_data, int nb_samples) {
   int max_samples = 0;
@@ -122,8 +121,12 @@ int Resampler::resample(AVAudioFifo* af,
   int rc = 0;
 
   // sanity check
-  if (!af || !audio_data || nb_samples < 0) {
+  if (!af || nb_samples < 0) {
     return INT_MIN;
+  }
+
+  if (operator!()) {
+    return INT_MIN + 1;
   }
 
   // calculate max output samples
@@ -159,14 +162,18 @@ int Resampler::resample(AVAudioFifo* af,
     max_samples_ = max_samples;
   }
 
+  // resample
   out_samples = swr_convert(swr_, audio_data_, max_samples, audio_data, nb_samples);
   if (out_samples < 0) {
     return -3;
   }
 
-  rc = av_audio_fifo_write(af, (void**) audio_data_, out_samples);
-  if (rc < out_samples) {
-    return -4;
+  // write to fifo
+  if (out_samples > 0) {
+    rc = av_audio_fifo_write(af, (void**) audio_data_, out_samples);
+    if (rc != out_samples) {
+      return -4;
+    }
   }
 
   return out_samples;
