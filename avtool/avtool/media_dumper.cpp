@@ -56,7 +56,7 @@ AudioDumper::AudioDumper(const std::string& filename,
   c_->sample_fmt = codec_->sample_fmts ? codec_->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
   av_channel_layout_copy(&c_->ch_layout, &channel_layout);
   c_->sample_rate = sample_rate;
-  if (oc_->oformat->flags & AVFMT_GLOBALHEADER) {
+  if (fmt_->flags & AVFMT_GLOBALHEADER) {
     c_->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
   }
 
@@ -74,7 +74,7 @@ AudioDumper::AudioDumper(const std::string& filename,
     goto err_exit;
   }
   st_->id = oc_->nb_streams - 1;
-  st_->time_base = (AVRational) {1, c_->sample_rate};
+  st_->time_base = {1, c_->sample_rate};
 
   // copy the stream parameters to the muxer
   rc = avcodec_parameters_from_context(st_->codecpar, c_);
@@ -83,23 +83,7 @@ AudioDumper::AudioDumper(const std::string& filename,
     goto err_exit;
   }
 
-  // Alloc AVFifo & Resampler
-  if (!(codec_->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE)
-      || (sample_fmt != c_->sample_fmt)) {
-    af_ = av_audio_fifo_alloc(c_->sample_fmt, c_->ch_layout.nb_channels, max_samples);
-    if (!af_) {
-      oss << "Could not allocate FIFO";
-      goto err_exit;
-    }
-    if (sample_fmt != c_->sample_fmt) {
-      resampler_ = new(std::nothrow) Resampler(sample_fmt, channel_layout, sample_rate,
-                                               c_->sample_fmt, c_->ch_layout, c_->sample_rate);
-      if (!resampler_ || !(*resampler_)) {
-        oss << "Could not create resampler";
-        goto err_exit;
-      }
-    }
-  }
+  av_dump_format(oc_, 0, filename.c_str(), 1);
 
   // alloc frame
   frame_ = av_frame_alloc();
@@ -108,10 +92,10 @@ AudioDumper::AudioDumper(const std::string& filename,
     goto err_exit;
   }
   frame_->format = c_->sample_fmt;
-  av_channel_layout_copy(&frame_->ch_layout, &channel_layout);
+  av_channel_layout_copy(&frame_->ch_layout, &c_->ch_layout);
   frame_->sample_rate = c_->sample_rate;
   frame_->nb_samples = (codec_->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE)
-                       ? max_samples : c_->frame_size;
+                       ? max_frame_size : c_->frame_size;
   rc = av_frame_get_buffer(frame_, 0);
   if (rc < 0) {
     oss << "Could not allocate frame data";
@@ -125,7 +109,25 @@ AudioDumper::AudioDumper(const std::string& filename,
     goto err_exit;
   }
 
-  av_dump_format(oc_, 0, filename.c_str(), 1);
+  frame_size_ = frame_->nb_samples;
+
+  // Alloc AVFifo & Resampler
+  if (!(codec_->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE)
+      || (c_->sample_fmt != sample_fmt)) {
+    af_ = av_audio_fifo_alloc(c_->sample_fmt, c_->ch_layout.nb_channels, max_frame_size);
+    if (!af_) {
+      oss << "Could not allocate FIFO";
+      goto err_exit;
+    }
+    if (c_->sample_fmt != sample_fmt) {
+      resampler_ = new(std::nothrow) Resampler(sample_fmt, channel_layout, sample_rate,
+                                               c_->sample_fmt, c_->ch_layout, c_->sample_rate);
+      if (!resampler_ || !(*resampler_)) {
+        oss << "Could not create resampler";
+        goto err_exit;
+      }
+    }
+  }
 
   // open the output file, if needed
   if (!(fmt_->flags & AVFMT_NOFILE)) {
@@ -151,35 +153,96 @@ err_exit:
   throw std::runtime_error(oss.str());
 }
 
+AudioDumper::AudioDumper(AudioDumper&& rhs)
+  noexcept
+    : filename_(rhs.filename_),
+      in_sample_fmt_(rhs.in_sample_fmt_),
+      in_channels_(rhs.in_channels_),
+      in_sample_rate_(rhs.in_sample_rate_),
+      fmt_(rhs.fmt_),
+      codec_(rhs.codec_),
+      oc_(rhs.oc_),
+      c_(rhs.c_),
+      st_(rhs.st_),
+      frame_(rhs.frame_),
+      pkt_(rhs.pkt_),
+      frame_size_(rhs.frame_size_),
+      af_(rhs.af_),
+      resampler_(rhs.resampler_),
+      need_close_(rhs.need_close_),
+      need_trailer_(rhs.need_trailer_),
+      samples_count_(rhs.samples_count_) {
+  rhs.reset();
+}
+
+AudioDumper& AudioDumper::operator=(AudioDumper&& rhs) noexcept {
+  if (this != &rhs) {
+    clean();
+
+    filename_ = rhs.filename_;
+    in_sample_fmt_ = rhs.in_sample_fmt_;
+    in_channels_ = rhs.in_channels_;
+    in_sample_rate_ = rhs.in_sample_rate_;
+
+    fmt_ = rhs.fmt_;
+    codec_ = rhs.codec_;
+    oc_ = rhs.oc_;
+    c_ = rhs.c_;
+    st_ = rhs.st_;
+
+    frame_ = rhs.frame_;
+    pkt_ = rhs.pkt_;
+    frame_size_ = rhs.frame_size_;
+
+    af_ = rhs.af_;
+    resampler_ = rhs.resampler_;
+
+    need_close_ = rhs.need_close_;
+    need_trailer_ = rhs.need_trailer_;
+
+    samples_count_ = rhs.samples_count_;
+
+    rhs.reset();
+  }
+  return *this;
+}
+
 AudioDumper::~AudioDumper() {
   clean();
 }
 
-int AudioDumper::dump(uint8_t* const* audio_data, int nb_samples) {
+int AudioDumper::dump(const uint8_t* const* audio_data, int nb_samples) {
   int rc = 0;
 
   // sanity check
-  if (nb_samples < 0 || nb_samples > max_samples) {
+  if (nb_samples < 0 || nb_samples > max_frame_size) {
     return INT_MIN;
   }
 
   if (af_) {
     // 1. caching
     if (resampler_) {
-      rc = resampler_->resample(af_, (const uint8_t**) audio_data, nb_samples);
+      rc = resampler_->resample(af_, audio_data, nb_samples);
       check_exit(rc, -1);
     } else {
       if (audio_data) {
-        rc = av_audio_fifo_write(af_, (void**) audio_data, nb_samples);
+        rc = av_audio_fifo_write(af_,
+                                 const_cast<void* const*>(reinterpret_cast<const void* const*>(audio_data)),
+                                 nb_samples);
         check_exit(rc, -2);
       }
     }
 
     // 2. framing (use codec default frame size)
-    while (av_audio_fifo_size(af_) >= c_->frame_size) {
+    while (true) {
+      int fifo_sz = av_audio_fifo_size(af_);
+      int min_frame_sz = !(codec_->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE) ? c_->frame_size : 1;
+      if (fifo_sz < min_frame_sz) {
+        break;
+      }
       rc = av_frame_make_writable(frame_);
       check_exit(rc, -3);
-      rc = av_audio_fifo_read(af_, (void**) frame_->extended_data, c_->frame_size);
+      rc = av_audio_fifo_read(af_, reinterpret_cast<void**>(frame_->extended_data), frame_size_);
       check_exit(rc, -4);
       frame_->nb_samples = rc;
       frame_->pts = samples_count_;
@@ -195,7 +258,7 @@ int AudioDumper::dump(uint8_t* const* audio_data, int nb_samples) {
       while (av_audio_fifo_size(af_) > 0) {
         rc = av_frame_make_writable(frame_);
         check_exit(rc, -7);
-        rc = av_audio_fifo_read(af_, (void**) frame_->extended_data, c_->frame_size);
+        rc = av_audio_fifo_read(af_, reinterpret_cast<void**>(frame_->extended_data), frame_size_);
         check_exit(rc, -8);
         frame_->nb_samples = rc;
         frame_->pts = samples_count_;
@@ -216,7 +279,7 @@ int AudioDumper::dump(uint8_t* const* audio_data, int nb_samples) {
     if (audio_data) {
       rc = av_frame_make_writable(frame_);
       check_exit(rc, -13);
-      rc = av_samples_copy(frame_->extended_data, audio_data,
+      rc = av_samples_copy(frame_->extended_data, const_cast<uint8_t* const*>(audio_data),
                            0, 0, nb_samples, in_channels_, in_sample_fmt_);
       check_exit(rc, -14);
       frame_->nb_samples = nb_samples;
@@ -246,9 +309,12 @@ void AudioDumper::clean() {
     avcodec_free_context(&c_);
   }
 
-  if (af_) {
-    av_audio_fifo_free(af_);
-    af_ = NULL;
+  if (frame_) {
+    av_frame_free(&frame_);
+  }
+
+  if (pkt_) {
+    av_packet_free(&pkt_);
   }
 
   if (resampler_) {
@@ -256,12 +322,9 @@ void AudioDumper::clean() {
     resampler_ = NULL;
   }
 
-  if (frame_) {
-    av_frame_free(&frame_);
-  }
-
-  if (pkt_) {
-    av_packet_free(&pkt_);
+  if (af_) {
+    av_audio_fifo_free(af_);
+    af_ = NULL;
   }
 
   if (need_close_) {
@@ -284,37 +347,39 @@ void AudioDumper::reset() {
   c_ = NULL;
   st_ = NULL;
 
+  frame_ = NULL;
+  pkt_ = NULL;
+  frame_size_ = 0;
+
   af_ = NULL;
   resampler_ = NULL;
 
-  frame_ = NULL;
-  pkt_ = NULL;
-
-  samples_count_ = 0;
   need_close_ = false;
   need_trailer_ = false;
+
+  samples_count_ = 0;
 }
 
 int AudioDumper::receive_n_write_packet() {
-  int ret = 0;
+  int rc = 0;
 
   do {
     // receive packet
-    int rc = avcodec_receive_packet(c_, pkt_);
+    rc = avcodec_receive_packet(c_, pkt_);
     if (rc == AVERROR(EAGAIN) || rc == AVERROR_EOF) {
-      ret = 0;
+      rc = 0;
       break;
     } else if (rc < 0) {
-      ret = -1;
+      rc = -1;
       break;
     }
     // write packet
     rc = av_interleaved_write_frame(oc_, pkt_);
     if (rc < 0) {
-      ret = -2;
+      rc = -2;
       break;
     }
   } while (true);
 
-  return ret;
+  return rc;
 }

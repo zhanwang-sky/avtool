@@ -9,34 +9,6 @@
 
 using namespace AVTool;
 
-AVFrame* AVTool::alloc_audio_frame(enum AVSampleFormat sample_fmt,
-                                   const AVChannelLayout* channel_layout,
-                                   int sample_rate, int nb_samples) {
-  AVFrame* frame = av_frame_alloc();
-  if (!frame) {
-    goto err_exit;
-  }
-
-  frame->format = sample_fmt;
-  av_channel_layout_copy(&frame->ch_layout, channel_layout);
-  frame->sample_rate = sample_rate;
-  frame->nb_samples = nb_samples;
-
-  if (nb_samples) {
-    if (av_frame_get_buffer(frame, 0) < 0) {
-      goto err_exit;
-    }
-  }
-
-  return frame;
-
-err_exit:
-  if (frame) {
-    av_frame_free(&frame);
-  }
-  return NULL;
-}
-
 Resampler::Resampler(enum AVSampleFormat in_sample_fmt,  const AVChannelLayout& in_chlayout,  int in_sample_rate,
                      enum AVSampleFormat out_sample_fmt, const AVChannelLayout& out_chlayout, int out_sample_rate)
   noexcept
@@ -115,7 +87,7 @@ bool Resampler::operator!() const {
 }
 
 int Resampler::resample(AVAudioFifo* af,
-                        const uint8_t** audio_data, int nb_samples) {
+                        const uint8_t* const* audio_data, int nb_samples) {
   int max_samples = 0;
   int out_samples = 0;
   int rc = 0;
@@ -125,7 +97,7 @@ int Resampler::resample(AVAudioFifo* af,
     return INT_MIN;
   }
 
-  if (operator!()) {
+  if (!(*this)) {
     return INT_MIN + 1;
   }
 
@@ -139,10 +111,8 @@ int Resampler::resample(AVAudioFifo* af,
 
   // realloc buffer
   if (max_samples_ < max_samples) {
-    if (audio_data_) {
-      if (audio_data_[0]) {
-        av_freep(&audio_data_[0]);
-      }
+    if (audio_data_ && audio_data_[0]) {
+      av_freep(&audio_data_[0]);
     }
   }
 
@@ -163,14 +133,16 @@ int Resampler::resample(AVAudioFifo* af,
   }
 
   // resample
-  out_samples = swr_convert(swr_, audio_data_, max_samples, audio_data, nb_samples);
+  out_samples = swr_convert(swr_,
+                            audio_data_, max_samples,
+                            const_cast<const uint8_t**>(audio_data), nb_samples);
   if (out_samples < 0) {
     return -3;
   }
 
   // write to fifo
   if (out_samples > 0) {
-    rc = av_audio_fifo_write(af, (void**) audio_data_, out_samples);
+    rc = av_audio_fifo_write(af, reinterpret_cast<void**>(audio_data_), out_samples);
     if (rc != out_samples) {
       return -4;
     }

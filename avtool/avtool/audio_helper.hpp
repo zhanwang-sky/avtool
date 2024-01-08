@@ -16,10 +16,6 @@ extern "C" {
 
 namespace AVTool {
 
-AVFrame* alloc_audio_frame(enum AVSampleFormat sample_fmt,
-                           const AVChannelLayout* channel_layout,
-                           int sample_rate, int nb_samples);
-
 class Resampler {
  public:
   Resampler(const Resampler&) = delete;
@@ -36,7 +32,7 @@ class Resampler {
 
   bool operator!() const;
 
-  int resample(AVAudioFifo* af, const uint8_t** audio_data, int nb_samples);
+  int resample(AVAudioFifo* af, const uint8_t* const* audio_data, int nb_samples);
 
  protected:
   void clean();

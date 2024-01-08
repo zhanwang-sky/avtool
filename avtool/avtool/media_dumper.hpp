@@ -24,7 +24,7 @@ namespace AVTool {
 
 class AudioDumper {
  public:
-  static constexpr int max_samples = 16384;
+  static constexpr int max_frame_size = 16384;
 
   AudioDumper(const AudioDumper&) = delete;
   AudioDumper& operator=(const AudioDumper&) = delete;
@@ -34,12 +34,12 @@ class AudioDumper {
               const AVChannelLayout& channel_layout,
               int sample_rate);
 
-  AudioDumper(AudioDumper&&) = delete;
-  AudioDumper& operator=(AudioDumper&&) = delete;
+  AudioDumper(AudioDumper&&) noexcept;
+  AudioDumper& operator=(AudioDumper&&) noexcept;
 
   virtual ~AudioDumper();
 
-  int dump(uint8_t* const* audio_data, int nb_samples);
+  int dump(const uint8_t* const* audio_data, int nb_samples);
 
  protected:
   void clean();
@@ -50,7 +50,6 @@ class AudioDumper {
   int receive_n_write_packet();
 
   std::string filename_;
-
   enum AVSampleFormat in_sample_fmt_;
   int in_channels_;
   int in_sample_rate_;
@@ -61,15 +60,17 @@ class AudioDumper {
   AVCodecContext* c_ = NULL;
   AVStream* st_ = NULL;
 
+  AVFrame* frame_ = NULL;
+  AVPacket* pkt_ = NULL;
+  int frame_size_ = 0;
+
   AVAudioFifo* af_ = NULL;
   Resampler* resampler_ = NULL;
 
-  AVFrame* frame_ = NULL;
-  AVPacket* pkt_ = NULL;
-
-  uint64_t samples_count_ = 0;
   bool need_close_ = false;
   bool need_trailer_ = false;
+
+  uint64_t samples_count_ = 0;
 };
 
 }
