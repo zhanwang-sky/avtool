@@ -16,6 +16,32 @@ extern "C" {
 
 namespace AVTool {
 
+class SamplesBuffer {
+ public:
+  SamplesBuffer(const SamplesBuffer&) = delete;
+  SamplesBuffer& operator=(const SamplesBuffer&) = delete;
+
+  SamplesBuffer(int channels, int samples, enum AVSampleFormat fmt) noexcept;
+
+  SamplesBuffer(SamplesBuffer&& rhs) noexcept;
+
+  SamplesBuffer& operator=(SamplesBuffer&& rhs) noexcept;
+
+  virtual ~SamplesBuffer();
+
+  bool operator!() const;
+
+  uint8_t** get();
+
+ protected:
+  void clean();
+
+  void reset();
+
+ private:
+  uint8_t** buf_ = NULL;
+};
+
 class Resampler {
  public:
   Resampler(const Resampler&) = delete;

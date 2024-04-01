@@ -9,6 +9,52 @@
 
 using namespace AVTool;
 
+SamplesBuffer::SamplesBuffer(int channels, int samples,
+                             enum AVSampleFormat fmt) noexcept {
+  av_samples_alloc_array_and_samples(&buf_, NULL, channels, samples, fmt, 0);
+}
+
+SamplesBuffer::SamplesBuffer(SamplesBuffer&& rhs) noexcept
+    : buf_(rhs.buf_) {
+  rhs.reset();
+}
+
+SamplesBuffer& SamplesBuffer::operator=(SamplesBuffer&& rhs) noexcept {
+  if (this != &rhs) {
+    clean();
+
+    buf_ = rhs.buf_;
+
+    rhs.reset();
+  }
+  return *this;
+}
+
+SamplesBuffer::~SamplesBuffer() {
+  clean();
+}
+
+bool SamplesBuffer::operator!() const {
+  return !buf_;
+}
+
+uint8_t** SamplesBuffer::get() {
+  return buf_;
+}
+
+void SamplesBuffer::clean() {
+  if (buf_) {
+    if (buf_[0]) {
+      av_freep(&buf_[0]);
+    }
+    av_freep(&buf_);
+  }
+}
+
+void SamplesBuffer::reset() {
+  buf_ = NULL;
+}
+
 Resampler::Resampler(enum AVSampleFormat in_sample_fmt,  const AVChannelLayout& in_chlayout,  int in_sample_rate,
                      enum AVSampleFormat out_sample_fmt, const AVChannelLayout& out_chlayout, int out_sample_rate)
   noexcept

@@ -8,6 +8,8 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+
+#include <rubberband/RubberBandStretcher.h>
 #include "avtool/audio_helper.hpp"
 #include "avtool/media_dumper.hpp"
 #include "mod_opus/mod_opus.h"
@@ -58,29 +60,36 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  RubberBand::RubberBandStretcher stretcher(SAMPLE_RATE, NR_CHANNELS,
+                                            RubberBand::RubberBandStretcher::OptionProcessRealTime
+                                            | RubberBand::RubberBandStretcher::OptionEngineFiner);
+  stretcher.setPitchScale(1.35);
+
   avTLVReader tlv_reader(argv[1]);
   if (!tlv_reader.is_open()) {
     cerr << "Fail to open tlv file '" << argv[1] << "'\n";
     exit(EXIT_FAILURE);
   }
 
-  uint8_t** s16_buf = NULL;
-  uint8_t** fltp_buf = NULL;
+  AVTool::SamplesBuffer s16_buf(NR_CHANNELS, MAX_SAMPLES_CACHE, AV_SAMPLE_FMT_S16);
+  if (!s16_buf) {
+    cerr << "Fail to alloc s16 buf\n";
+    exit(EXIT_FAILURE);
+  }
+
+  AVTool::SamplesBuffer fltp_buf(NR_CHANNELS, MAX_SAMPLES_CACHE, AV_SAMPLE_FMT_FLTP);
+  if (!fltp_buf) {
+    cerr << "Fail to alloc fltp buf\n";
+    exit(EXIT_FAILURE);
+  }
+
+  AVTool::SamplesBuffer stretched_buf(NR_CHANNELS, MAX_SAMPLES_CACHE, AV_SAMPLE_FMT_FLTP);
+  if (!stretched_buf) {
+    cerr << "Fail to alloc stretched buf\n";
+    exit(EXIT_FAILURE);
+  }
 
   try {
-    int rc = 0;
-    int linesize = 0;
-
-    rc = av_samples_alloc_array_and_samples(&s16_buf, &linesize, NR_CHANNELS, MAX_SAMPLES_CACHE, AV_SAMPLE_FMT_S16, 0);
-    if (rc < 0) {
-      throw std::runtime_error("Fail to alloc s16 buf");
-    }
-
-    rc = av_samples_alloc_array_and_samples(&fltp_buf, &linesize, NR_CHANNELS, MAX_SAMPLES_CACHE, AV_SAMPLE_FMT_FLTP, 0);
-    if (rc < 0) {
-      throw std::runtime_error("Fail to alloc fltp buf");
-    }
-
     AVTool::AudioDumper audio_dumper(argv[2], AV_SAMPLE_FMT_FLTP, ch_layout, SAMPLE_RATE);
 
     uint8_t marker = 0;
@@ -88,7 +97,7 @@ int main(int argc, char* argv[]) {
     uint32_t rtp_ts = 0;
     uint64_t cap_ts = 0;
     int tlv_len = 0;
-    int samples_decoded = 0;
+    int samples = 0;
 
     while ((tlv_len = tlv_reader.read(pkt_buf, sizeof(pkt_buf), marker, seq, rtp_ts, cap_ts)) > 0) {
       cout << "seq=" << seq
@@ -97,58 +106,53 @@ int main(int argc, char* argv[]) {
            << ", cap_ts=" << cap_ts
            << endl;
 
-      samples_decoded = av_opus_decode(opus_ctx.get(),
-                                       pkt_buf + tlv_reader.header_len,
-                                       tlv_len - tlv_reader.header_len,
-                                       s16_buf[0], SAMPLES_PER_FRAME);
-      cout << samples_decoded << " samples decoded\n";
-      if (samples_decoded <= 0) {
-        cout << "decode error, skip\n";
+      samples = av_opus_decode(opus_ctx.get(),
+                               pkt_buf + tlv_reader.header_len,
+                               tlv_len - tlv_reader.header_len,
+                               s16_buf.get()[0], SAMPLES_PER_FRAME);
+      cout << samples << " samples decoded\n";
+      if (samples <= 0) {
+        cout << "decode error(" << samples << ")\n";
         continue;
       }
 
-      rc = resampler.resample(audio_fifo.get(), s16_buf, samples_decoded);
-      cout << rc << " samples converted\n";
-      if (rc <= 0) {
-        cout << "resample error, skip\n";
+      samples = resampler.resample(audio_fifo.get(), s16_buf.get(), samples);
+      cout << samples << " samples converted\n";
+      if (samples <= 0) {
+        cout << "resample error(" << samples << ")\n";
         continue;
       }
 
-      rc = av_audio_fifo_read(audio_fifo.get(), reinterpret_cast<void**>(fltp_buf), MAX_SAMPLES_CACHE);
-      cout << rc << " samples read\n";
-      if (rc <= 0) {
-        cout << "read samples error, skip\n";
+      samples = av_audio_fifo_read(audio_fifo.get(), reinterpret_cast<void**>(fltp_buf.get()), MAX_SAMPLES_CACHE);
+      cout << samples << " samples read\n";
+      if (samples <= 0) {
+        cout << "fifo error(" << samples << ")\n";
         continue;
       }
 
-      audio_dumper.dump(fltp_buf, rc);
-      cout << rc << " samples write\n";
+      stretcher.process(reinterpret_cast<float**>(fltp_buf.get()), samples, false);
+
+      samples = stretcher.available();
+      cout << samples << " samples stretched\n";
+      if (samples <= 0) {
+        cout << "not available, skip\n";
+        continue;
+      }
+
+      stretcher.retrieve(reinterpret_cast<float**>(stretched_buf.get()), samples);
+
+      audio_dumper.dump(stretched_buf.get(), samples);
+      cout << samples << " samples write\n";
     }
 
     // flush
     audio_dumper.dump(NULL, 0);
 
-    cout << "break, rc=" << tlv_len << endl;
+    cout << "break " << tlv_len << endl;
 
   } catch (std::exception &e) {
     cerr << "Error: " << e.what() << endl;
-
-    if (s16_buf) {
-      if (s16_buf[0]) {
-        av_freep(&s16_buf[0]);
-      }
-      av_freep(&s16_buf);
-    }
-
-    if (fltp_buf) {
-      if (fltp_buf[0]) {
-        av_freep(&fltp_buf[0]);
-      }
-      av_freep(&fltp_buf);
-    }
-
     exit(EXIT_FAILURE);
-
   }
 
   return 0;
